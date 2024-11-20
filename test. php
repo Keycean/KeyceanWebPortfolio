@@ -67,7 +67,12 @@ if ($result->num_rows > 0) {
             }
         }
 
-        echo "</p><hr>";
+        echo "</p><hr>";// Add Delete Button
+        echo "<form action='submit_rating.php' method='POST' style='display:inline;'>
+                <input type='hidden' name='id' value='" . $row['id'] . "'>
+                <button type='submit' name='delete_rating'>Delete</button>
+              </form>";
+        echo "<hr>";
     }
 } else {
     echo "<p>No ratings submitted yet.</p>";
