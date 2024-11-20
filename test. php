@@ -1,9 +1,9 @@
 <?php
 // Database connection details
-$host = 'localhost';
-$username = 'root';
-$password = '';
-$database = 'rating_system';
+$host = 'localhost'; // Change to your database host
+$username = 'root';  // Change to your database username
+$password = '';      // Change to your database password
+$database = 'rating_system'; // Database name
 
 // Create a connection
 $conn = new mysqli($host, $username, $password, $database);
@@ -13,7 +13,27 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Query to get all user ratings
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Get form data
+    $name = htmlspecialchars($_POST['name']);
+    $email = htmlspecialchars($_POST['email']);
+    $rate = intval($_POST['rate']);
+
+    // Insert data into the database
+    $stmt = $conn->prepare("INSERT INTO users (name, email, rate) VALUES (?, ?, ?)");
+    $stmt->bind_param("ssi", $name, $email, $rate);
+
+    if ($stmt->execute()) {
+        echo "<p><strong>Rating Submitted Successfully!</strong></p>";
+    } else {
+        echo "<p>Error: " . $stmt->error . "</p>";
+    }
+
+    $stmt->close();
+}
+
+// Query to fetch all user ratings
 $sql = "SELECT * FROM users ORDER BY created_at DESC";
 $result = $conn->query($sql);
 
@@ -26,14 +46,13 @@ $stats = $stats_result->fetch_assoc();
 $total_ratings = $stats['total_ratings'];
 $avg_rating = number_format($stats['avg_rating'], 2); // Format to 2 decimal places
 
-echo "<h1>Submitted Ratings</h1>";
-
 // Display statistics
+echo "<h1>Submitted Ratings</h1>";
 echo "<p><strong>Total Ratings Submitted:</strong> $total_ratings</p>";
 echo "<p><strong>Average Rating:</strong> $avg_rating &#9733;</p>";
 
+// Display user submissions
 if ($result->num_rows > 0) {
-    // Loop through and display each user's submission
     while ($row = $result->fetch_assoc()) {
         echo "<p><strong>Name:</strong> " . $row['name'] . "</p>";
         echo "<p><strong>Email:</strong> " . $row['email'] . "</p>";
@@ -57,3 +76,23 @@ if ($result->num_rows > 0) {
 // Close the connection
 $conn->close();
 ?>
+
+<!-- HTML Form -->
+<form action="submit_rating.php" method="POST">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required><br>
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required><br>
+
+    <label for="rate">Rate:</label>
+    <select id="rate" name="rate" required>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+    </select><br><br>
+
+    <button type="submit">Submit</button>
+</form>
